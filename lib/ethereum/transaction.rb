@@ -98,18 +98,26 @@ module Ethereum
     #
     # A potentially already existing signature would be override.
     #
-    def sign(key)
-      raise InvalidTransaction, "Zero privkey cannot sign" if [0, '', Constant::PRIVKEY_ZERO, Constant::PRIVKEY_ZERO_HEX].include?(key)
+    def unsigned_encoded
+      RLP.encode(self, sedes: UnsignedTransaction)
+    end
 
-      rawhash = Utils.keccak256 RLP.encode(self, sedes: UnsignedTransaction)
-      key = PrivateKey.new(key).encode(:bin)
+    def encoded
+      RLP.encode self
+    end
 
-      vrs = Secp256k1.recoverable_sign rawhash, key
+    def sign(vrs)
+      # raise InvalidTransaction, "Zero privkey cannot sign" if [0, '', Constant::PRIVKEY_ZERO, Constant::PRIVKEY_ZERO_HEX].include?(key)
+
+      # rawhash = Utils.keccak256 RLP.encode(self, sedes: UnsignedTransaction)
+      # key = PrivateKey.new(key).encode(:bin)
+
+      # vrs ||= Secp256k1.recoverable_sign rawhash, key
       self.v = vrs[0]
       self.r = vrs[1]
       self.s = vrs[2]
 
-      self.sender = PrivateKey.new(key).to_address
+      # self.sender = PrivateKey.new(key).to_address
 
       self
     end
